@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node ./server/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha ./server/**/*.test.js",
     "deploy": "git push heroku master"
   },
   "engines": {
@@ -19,7 +19,9 @@
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
-    "eslint-plugin-standard": "^4.0.0"
+    "eslint-plugin-standard": "^4.0.0",
+    "expect": "^24.1.0",
+    "mocha": "^5.2.0"
   },
   "dependencies": {
     "express": "^4.16.4",
