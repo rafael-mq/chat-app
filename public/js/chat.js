@@ -24,6 +24,7 @@ socket.on('connect', function () {
   socket.emit('join', params, function (err) {
     if (err) {
       alert(err)
+      // console.log(err)
       window.location.href = '/'
     } else {
       console.log('no errors')
@@ -33,6 +34,17 @@ socket.on('connect', function () {
 
 socket.on('disconnect', function () {
   console.log('disconnected from server')
+})
+
+socket.on('updateUsersList', function (userslist) {
+  console.log(userslist)
+  var ul = jQuery('<ul></ul>')
+
+  userslist.forEach(function (user) {
+    ul.append(jQuery('<li></li>').text(user))
+  })
+
+  jQuery('#users').html(ul)
 })
 
 socket.on('newMessage', function (message) {

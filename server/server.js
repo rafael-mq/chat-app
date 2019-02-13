@@ -1,3 +1,4 @@
+/* eslint-disable standard/no-callback-literal */
 const path = require('path')
 const express = require('express')
 const http = require('http')
@@ -5,25 +6,32 @@ const socketIO = require('socket.io')
 
 const { generateMessage, generateLocationMessage } = require('./utils/message')
 const { isRealString } = require('./utils/validation')
+const { Users } = require('./utils/users')
+
 const publicPath = path.join(__dirname, './../public')
 const port = process.env.PORT || 3000
 const app = express()
 const server = http.createServer(app)
 const io = socketIO(server)
+const users = new Users()
 
 app.use(express.static(publicPath))
 
 io.on('connection', socket => {
   console.log('new user connected')
 
-  socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'))
-
-  socket.broadcast.emit('newMessage', generateMessage('Admin', 'New User joined'))
-
   socket.on('join', (params, callback) => {
     if (!isRealString(params.name) || !isRealString(params.room)) {
-      callback(new Error('Name and Room Name are required.'))
+      callback('Name and Room Name are required.')
     }
+
+    socket.join(params.room)
+    users.removeUser(socket.id) // remove user if it already is logged in
+    users.addUsers(socket.id, params.name, params.room)
+    io.to(params.room).emit('updateUsersList', users.getUsersList(params.room))
+
+    socket.emit('newMessage', generateMessage('Admin', `Welcome to the chat app, you're on ${params.room} room`))
+    socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined.`))
 
     callback()
   })
@@ -39,6 +47,12 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     console.log('user disconnected')
+    let user = users.removeUser(socket.id)
+
+    if (user) {
+      io.to(user.room).emit('updateUsersList', users.getUsersList(user.room))
+      io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has left.`))
+    }
   })
 })
 
